@@ -67,7 +67,7 @@ chrome.runtime.onMessage.addListener(
         if (number == null) {
           return;
         }
-        newText = (number / denominator).toFixed(2);
+        newText = (number / denominator).toFixed(3);
         textNode.textContent = newText;
         textNode.setAttribute('node_id', node_id);
         chrome.storage.local.set({
