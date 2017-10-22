@@ -34,17 +34,19 @@ function processSeletion(callback) {
 }
 
 function parseNumber(str) {
+  var prefix = '';
+  var suffix = '';
   str = str.replace(/,/g, '');
-  var sign = 1;
-  if (str.length > 0 && str[0] == '(') {
-    sign = -1;
+  if (str.length > 0 && (str[0] == '(' || str[0] == '-')) {
+    prefix = str[0];
     str = str.substr(1);
     if (str.length > 0 && str[str.length - 1] == ')') {
+      suffix = str[str.length - 1];
       str = str.substr(0, str.length - 1);
     }
   }
   var number = parseFloat(str);
-  return isNaN(number) ? null : (number * sign);
+  return [isNaN(number) ? null : number , prefix, suffix];
 }
 
 chrome.runtime.onMessage.addListener(
@@ -52,7 +54,7 @@ chrome.runtime.onMessage.addListener(
     console.log("Got a request: " + JSON.stringify(request));
     var callback = null;
     if (request.cmd == 'replace') {
-      var denominator = parseNumber(request.denominator);
+      [denominator, _, _] = parseNumber(request.denominator);
       if (denominator == null) {
         console.log("The denominator is not a number: " + request.denominator);
         return;
@@ -66,11 +68,11 @@ chrome.runtime.onMessage.addListener(
           return;
         }
         var oldText = textNode.textContent;
-        number = parseNumber(oldText);
+        [number, prefix, suffix] = parseNumber(oldText);
         if (number == null) {
           return;
         }
-        newText = (number / denominator).toFixed(3);
+        newText = prefix + (number / denominator).toFixed(3) + suffix;
         textNode.textContent = newText;
         textNode.setAttribute('__original_text__', oldText);
         /*
