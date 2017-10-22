@@ -12,5 +12,8 @@
         "js": ["process_selection.js"],
         "run_at": "document_end"
     }],
-  "permissions" : ["tabs"]
+  "permissions" : [
+      "tabs",
+      "storage"
+   ]
 }

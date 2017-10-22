@@ -1,14 +1,13 @@
-
 function processDom(root, callback) {
   console.log("processing root with " + root.children.length + " children.");
   if (root.children.length == 0 && root.textContent != null && root.textContent != '') {
-    console.log("Processing text: [" + root.textContent + "]");
+    console.log("Processing root text: [" + root.textContent + "]");
     root.textContent = callback(root.textContent);
   }
   for (var i = 0; i < root.children.length; ++i) {
     child = root.children[i];
     if (child.nodeType == Node.TEXT_NODE) {
-      console.log("Processing text: [" + child.textContent + "]");
+      console.log("Processing child text: [" + child.textContent + "]");
       child.textContent = callback(child.textContent);
     } else {
       processDom(child, callback);
@@ -48,17 +47,35 @@ chrome.runtime.onMessage.addListener(
     console.log("Got a request: " + JSON.stringify(request));
     var callback = null;
     if (request.cmd == 'replace') {
-      var divider = parseFloat(request.divider);
+      var denominator = parseNumber(request.denominator);
+      if (denominator == null) {
+        console.log("The denominator is not a number: " + request.denominator);
+        return;
+      }
+      chrome.storage.local.set({
+          '__denom__': request.denominator,
+      });
       callback = function(text) {
-      number = parseNumber(text);
+        var oldText = text;
+        number = parseNumber(text);
         if (number == null) {
-          return text;
+        return text;
         }
-        return text + ' #(' + (number / divider).toFixed(2) + ')';
+        newText = (number / denominator).toFixed(2);
+        chrome.storage.local.set({
+            [newText]: oldText,
+        });
+        return newText;
       };
     } else if (request.cmd == 'restore') {
-      callback = function(text) {
-        return text.replace(/ #\(-?\d+\.\d+\)$/g, '');
+      callback = function(newText) {
+        chrome.storage.local.get(newText, function(result) {
+          if (result.hasOwnProperty(newText)) {
+            console.log("Get [" + result[newText] + "] from the local storage for key: [" + newText + "].");
+            return result[newText];
+          }
+          return newText;
+        });
       };
     }
     processSeletion(callback);
