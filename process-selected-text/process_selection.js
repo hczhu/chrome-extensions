@@ -1,6 +1,6 @@
 
 function processDom(root, callback) {
-	console.log("processing root with " + root.children.length + " children.");
+  console.log("processing root with " + root.children.length + " children.");
   if (root.children.length == 0 && root.textContent != null && root.textContent != '') {
     console.log("Processing text: [" + root.textContent + "]");
     root.textContent = callback(root.textContent);
@@ -17,20 +17,20 @@ function processDom(root, callback) {
 }
 
 function processSeletion(callback) {
-	selection = window.getSelection();
+  selection = window.getSelection();
   // console.log(selection.toString());
-	if (selection.rangeCount) {
-		for (var i = 0; i < selection.rangeCount; ++i) {
-			root = selection.getRangeAt(i).commonAncestorContainer
+  if (selection.rangeCount) {
+    for (var i = 0; i < selection.rangeCount; ++i) {
+      root = selection.getRangeAt(i).commonAncestorContainer
       processDom(root, callback);
-		}
-	} else if (selection.type == "Text") {
+    }
+  } else if (selection.type == "Text") {
     alert("Doesn't work for selected text only");
-	}
+  }
 }
 
 function parseNumber(str) {
-  str = str.replace(',', '');
+  str = str.replace(/,/g, '');
   var sign = 1;
   if (str.length > 0 && str[0] == '(') {
     sign = -1;
