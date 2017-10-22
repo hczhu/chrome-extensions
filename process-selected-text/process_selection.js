@@ -2,13 +2,15 @@ function processDom(root, node_id, callback) {
   // console.log("processing root with " + root.children.length + " children.");
   if (root.children.length == 0 && root.textContent != null && root.textContent != '') {
     // console.log("Processing root text: [" + root.textContent + "]");
-    callback(root, node_id++);
+    callback(root);
+    node_id++;
   }
   for (var i = 0; i < root.children.length; ++i) {
     child = root.children[i];
     if (child.nodeType == Node.TEXT_NODE) {
       // console.log("Processing child text: [" + child.textContent + "]");
-      callback(child, node_id++);
+      callback(child);
+      node_id++;
     } else {
       node_id = processDom(child, node_id, callback);
     }
@@ -19,7 +21,7 @@ function processDom(root, node_id, callback) {
 function processSeletion(callback) {
   selection = window.getSelection();
   // console.log(selection.toString());
-  var node_id = Date.now();
+  var node_id = 0; //  Date.now();
   if (selection.rangeCount) {
     for (var i = 0; i < selection.rangeCount; ++i) {
       root = selection.getRangeAt(i).commonAncestorContainer
@@ -28,6 +30,7 @@ function processSeletion(callback) {
   } else if (selection.type == "Text") {
     alert("Doesn't work for selected text only");
   }
+  console.log("Traversed " + node_id + " dom nodes.");
 }
 
 function parseNumber(str) {
@@ -57,8 +60,8 @@ chrome.runtime.onMessage.addListener(
       chrome.storage.local.set({
           '__denom__': request.denominator,
       });
-      callback = function(textNode, node_id) {
-        if (textNode.getAttribute('node_id') != null) {
+      callback = function(textNode) {
+        if (textNode.getAttribute('__original_text__') != null) {
           console.log("Skip an already processed node: " + textNode.textContent);
           return;
         }
@@ -69,25 +72,30 @@ chrome.runtime.onMessage.addListener(
         }
         newText = (number / denominator).toFixed(3);
         textNode.textContent = newText;
-        textNode.setAttribute('node_id', node_id);
+        textNode.setAttribute('__original_text__', oldText);
+        /*
         chrome.storage.local.set({
             [node_id]: oldText,
         });
+        */
       };
     } else if (request.cmd == 'restore') {
       callback = function(textNode, node_id) {
-        node_id = textNode.getAttribute('node_id');
-        if (node_id == null) {
+        var originalText = textNode.getAttribute('__original_text__');
+        if (originalText == null) {
           return;
         }
+        /*
         chrome.storage.local.get(node_id, function(result) {
           if (result.hasOwnProperty(node_id)) {
             // console.log("Get [" + result[newText] + "] from the local storage for key: [" + newText + "].");
             textNode.textContent = result[node_id];
           }
         });
-        textNode.removeAttribute('node_id');
-        chrome.storage.local.remove(node_id);
+        */
+        textNode.textContent = originalText
+        textNode.removeAttribute('__original_text__');
+        // chrome.storage.local.remove(node_id);
       };
     }
     processSeletion(callback);
