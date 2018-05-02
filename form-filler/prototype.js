@@ -2,11 +2,11 @@ items = document.evaluate('//li[@ng-repeat="option in options"]', document, null
 nodes=[];
 itr = items.iterateNext();
 while (itr) {
-    ndoes.push(itr);
+    nodes.push(itr);
     itr=items.iterateNext();
 }
 for (let i = 0; i<nodes.length; ++i) {
     if (nodes[i].children[1].textContent == "No") {
-        nodes[i].children[0].checked = true;
+        nodes[i].children[0].checked.click();
     }
 }
